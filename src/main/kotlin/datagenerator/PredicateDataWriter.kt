@@ -12,12 +12,12 @@ fun writePredicateDataSetToFile(predicateDataSet: Set<PredicateData>, target: Pa
     val xmlWriter = IndentingXMLStreamWriter(
         XMLOutputFactory.newFactory().createXMLStreamWriter(FileOutputStream(File(target.toUri())), "UTF-8")
     )
-    xmlWriter.document {
+    // xmlWriter.document {
         //element("synthesis-data") {
         //    attribute("type", "predicates")
         //    attribute("created", LocalDateTime.now().toString())
         predicateDataSet.forEach { predicateData ->
-            element("record") {
+            xmlWriter.element("record") {
                 attribute("path", predicateData.metaData.machinePath)
                 attribute("machine", predicateData.metaData.machineName)
                 attribute("examples", predicateData.amountOfExamples().toString())
@@ -61,7 +61,6 @@ fun writePredicateDataSetToFile(predicateDataSet: Set<PredicateData>, target: Pa
             }
             //  }
         }
-    }
     xmlWriter.flush()
     xmlWriter.close()
 }
