@@ -7,7 +7,7 @@ import java.nio.file.Paths
 private val logger = LoggerFactory.getLogger(DataGenerator::class.java)
 
 fun main(args: Array<String>) {
-    System.setProperty("logback.configurationFile", "config/logging.xml");
+    System.setProperty("logback.configurationFile", "config/logging.xml")
     if (args.size != 1) {
         println("One argument expected: Path to the root of the predicate database.")
         return
@@ -15,7 +15,7 @@ fun main(args: Array<String>) {
     val rootPath = Paths.get(args.first())
     val dataGenerator = DataGenerator()
     try {
-        Files.walk(rootPath).forEach {
+        Files.walk(rootPath).parallel().forEach {
             if (it.toString().endsWith("dump")) {
                 dataGenerator.generateDataFromDumpFile(it)
             }

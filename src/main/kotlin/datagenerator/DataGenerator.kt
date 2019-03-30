@@ -23,7 +23,6 @@ class DataGenerator {
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val injector = Guice.createInjector(Stage.PRODUCTION, DataGeneratorModule(), MainModule())
-    private val api = injector.getInstance(Api::class.java)
 
     private fun pathToProbExamples(source: Path) = source.toString().removePrefix("examples/")
 
@@ -35,7 +34,7 @@ class DataGenerator {
         )
 
     @Throws(DataGeneratorException::class)
-    private fun loadStateSpace(file: Path): StateSpace {
+    private fun loadStateSpace(api: Api, file: Path): StateSpace {
         logger.info("\tLoading state space for {}", file)
         try {
             val fileName = file.toString()
@@ -81,11 +80,14 @@ class DataGenerator {
                 logger.info("No training data found.")
                 return
             }
-            val stateSpace = loadStateSpace(rawData.first().source) // TODO: parallelise
-            val metaData = MetaData(sourceFile.toString(), stateSpace.loadedMachine.toString())
+            val api = injector.getInstance(Api::class.java)
+            val stateSpace = loadStateSpace(api, rawData.first().source)
+            val sourceFileNoExt = sourceFile.toString().removeSuffix(".pdump")
+            val metaData =
+                MetaData(sourceFile.toString(), sourceFileNoExt.split("/").last())
             rawData.forEach { generatedData.addAll(generateDataFromPredicate(metaData, stateSpace, it)) }
             // generated synthesis data is stored in the same folder as the input file
-            val target = Paths.get("${sourceFile.toString().removeSuffix(".pdump")}_synthesis_data.xml")
+            val target = Paths.get("${sourceFileNoExt}_synthesis_data.xml")
             writePredicateDataSetToFile(generatedData, target)
         } catch (e: Exception) {
             when (e) {
