@@ -62,7 +62,6 @@ fun writePredicateDataSetToFile(predicateDataSet: Set<PredicateData>, target: Pa
             //  }
         }
     }
-    println("Data written to $target.")
     xmlWriter.flush()
     xmlWriter.close()
 }
