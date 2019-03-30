@@ -8,7 +8,6 @@ import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.StateSpace
 import injector.DataGeneratorModule
 import org.slf4j.LoggerFactory
-import prob.PredicateData
 import prob.SynthesisDataFromPredicateCommand
 import java.io.IOException
 import java.lang.Exception
@@ -18,14 +17,22 @@ import java.nio.file.Paths
 
 class DataGenerator {
 
+    companion object {
+        private const val PROB_EXAMPLES_DIR = "/home/joshua/STUPS/"
+    }
+
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val dataGeneratorModule = DataGeneratorModule()
-    private val injector = Guice.createInjector(Stage.PRODUCTION, dataGeneratorModule, MainModule())
+    private val injector = Guice.createInjector(Stage.PRODUCTION, DataGeneratorModule(), MainModule())
     private val api = injector.getInstance(Api::class.java)
 
+    private fun pathToProbExamples(source: Path) = source.toString().removePrefix("examples/")
+
     @Throws(DataGeneratorException::class)
-    fun generateDataFromDumpEntry(source: Path, dataDumpEntry: String) =
-        RawDataSet(dataDumpEntry.split(":")[1], source)
+    private fun getRawDataSetFromDumpEntry(source: Path, dataDumpEntry: String) =
+        RawDataSet(
+            dataDumpEntry.substring(dataDumpEntry.indexOf(':') + 1),
+            Paths.get(PROB_EXAMPLES_DIR + pathToProbExamples(source))
+        )
 
     @Throws(DataGeneratorException::class)
     private fun loadStateSpace(file: Path): StateSpace {
@@ -54,8 +61,8 @@ class DataGenerator {
         if (next.startsWith("#source")) {
             try {
                 machineFile = Paths.get(next.substring(8))
-                lines.forEachRemaining { l ->
-                    data.add(generateDataFromDumpEntry(machineFile, l))
+                while (lines.hasNext()) {
+                    data.add(getRawDataSetFromDumpEntry(machineFile, lines.next()))
                 }
             } catch (e: DataGeneratorException) {
                 logger.warn("Could not translate data from dump entry in file {}.", sourceFile)
@@ -75,9 +82,10 @@ class DataGenerator {
                 return
             }
             val stateSpace = loadStateSpace(rawData.first().source) // TODO: parallelise
-            rawData.forEach { generatedData.add(generateDataFromPredicate(stateSpace, it)) }
+            val metaData = MetaData(sourceFile.toString(), stateSpace.loadedMachine.toString())
+            rawData.forEach { generatedData.addAll(generateDataFromPredicate(metaData, stateSpace, it)) }
             // generated synthesis data is stored in the same folder as the input file
-            val target = Paths.get("${pathWithoutMachineExtension(sourceFile)}_synthesis_data.xml")
+            val target = Paths.get("${sourceFile.toString().removeSuffix(".pdump")}_synthesis_data.xml")
             writePredicateDataSetToFile(generatedData, target)
         } catch (e: Exception) {
             when (e) {
@@ -88,14 +96,16 @@ class DataGenerator {
         }
     }
 
-    private fun pathWithoutMachineExtension(sourceFile: Path) =
-        sourceFile.toString().removeSuffix(".bcm").removeSuffix(".mch")
-
-    private fun generateDataFromPredicate(stateSpace: StateSpace, rawDataSet: RawDataSet): PredicateData {
-        val generateDataCommand = SynthesisDataFromPredicateCommand(rawDataSet.predicateAst)
+    private fun generateDataFromPredicate(
+        metaData: MetaData,
+        stateSpace: StateSpace,
+        rawDataSet: RawDataSet
+    ): Set<PredicateData> {
+        val generateDataCommand =
+            SynthesisDataFromPredicateCommand(
+                metaData, rawDataSet.predicateAst, 5, 10000
+            )
         stateSpace.execute(generateDataCommand)
-        generateDataCommand.predicateData
-        // TODO
-        return PredicateData(hashSetOf(), hashSetOf())
+        return generateDataCommand.predicateDataSet
     }
 }
