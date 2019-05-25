@@ -22,7 +22,12 @@ data class GroundTruthComponent(
     val componentAmount: Int
 )
 
-data class MetaData(val machinePath: String, val machineName: String, val predicateHash: Int)
+data class MetaData(
+    val machinePath: String,
+    val machineName: String,
+    val predicateHash: Int,
+    var operationName: String
+)
 
 data class RawDataSet(val predicateAst: String, val source: Path)
 
@@ -44,7 +49,7 @@ data class PredicateData(
 data class OperationData(
     val metaData: MetaData,
     val examples: HashSet<IOExample>,
-    val groundTruth: HashSet<GroundTruthComponent>
+    val varGroundTruths: HashMap<String, HashSet<GroundTruthComponent>>
 ) {
     fun amountOfExamples() = examples.size
 
