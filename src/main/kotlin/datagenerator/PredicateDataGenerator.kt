@@ -3,6 +3,7 @@ package datagenerator
 import com.google.inject.Guice
 import com.google.inject.Stage
 import de.prob.MainModule
+import de.prob.model.representation.Machine
 import de.prob.scripting.Api
 import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.StateSpace
@@ -15,7 +16,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class DataGenerator {
+class PredicateDataGenerator {
 
     companion object {
         private const val PROB_EXAMPLES_DIR = "/home/joshua/STUPS/"
@@ -83,9 +84,15 @@ class DataGenerator {
             val api = injector.getInstance(Api::class.java)
             val stateSpace = loadStateSpace(api, rawData.first().source)
             val sourceFileNoExt = sourceFile.toString().removeSuffix(".pdump")
-            val metaData =
-                MetaData(sourceFile.toString(), sourceFileNoExt.split("/").last())
-            rawData.forEach { generatedData.addAll(generateDataFromPredicate(metaData, stateSpace, it)) }
+            rawData.forEach {
+                val metaData =
+                    MetaData(
+                        it.source.toString(),
+                        (stateSpace.mainComponent as Machine).name,
+                        it.predicateAst.hashCode(), ""
+                    )
+                generatedData.addAll(generateDataFromPredicate(metaData, stateSpace, it))
+            }
             // generated synthesis data is stored in the same folder as the input file
             val target = Paths.get("${sourceFileNoExt}_synthesis_data.xml")
             writePredicateDataSetToFile(generatedData, target)
