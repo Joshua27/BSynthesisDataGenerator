@@ -15,7 +15,7 @@ import de.prob.prolog.term.PrologTerm
  * of usages, e.g., [(member,2), (integer_set,2), (conjunct, 2), (greater, 1)] for above predicate.
  */
 class SynthesisDataFromPredicateCommand(private val metaData: MetaData, private val rawPredicate: String) :
-    AbstractCommand() {
+    AbstractCommand(), SynthesisDataCommand {
 
     companion object {
         private const val PROLOG_COMMAND_NAME = "generate_synthesis_data_from_predicate_"
@@ -51,47 +51,28 @@ class SynthesisDataFromPredicateCommand(private val metaData: MetaData, private 
             val negativeInputs =
                 BindingGenerator.getList(nestedTuple.getArgument(1))
             positiveInputs.forEach { input ->
-                predicateData.positiveInputs.add(processInputState(BindingGenerator.getList(input)))
+                predicateData.positiveInputs.add(processState(BindingGenerator.getList(input)))
             }
             negativeInputs.forEach { input ->
-                predicateData.negativeInputs.add(processInputState(BindingGenerator.getList(input)))
+                predicateData.negativeInputs.add(processState(BindingGenerator.getList(input)))
             }
             processGroundTruth(
-                predicateData,
+                predicateData.groundTruth,
                 BindingGenerator.getList(nestedTuple.getArgument(2))
             )
             predicateDataSet.add(predicateData)
         }
     }
 
-    private fun processInputState(input: ListPrologTerm?): Set<VariableState> {
-        val inputSet = hashSetOf<VariableState>()
-        input?.forEach { varState ->
-            val varName = BindingGenerator.getCompoundTerm(varState, 2).getArgument(1).toString()
-            val nestedTuple = BindingGenerator.getCompoundTerm(varState,2).getArgument(2)
-            val varType = BindingGenerator.getCompoundTerm(nestedTuple, 2).getArgument(1).toString()
-            val varValue = BindingGenerator.getCompoundTerm(nestedTuple, 2).getArgument(2).toString()
-            inputSet.add(VariableState(Variable(varName, varType), varValue))
-        }
-        return inputSet
-    }
-
-    // ground truth is a Prolog list of tuples (ComponentName, ComponentAmount)
-    private fun processGroundTruth(predicateData: PredicateData, groundTruth: ListPrologTerm?) =
-        groundTruth?.forEach {
-            predicateData.groundTruth.add(
-                GroundTruthComponent(
-                    BindingGenerator.getCompoundTerm(it, 2).getArgument(1).toString(),
-                    Integer.parseInt(BindingGenerator.getCompoundTerm(it, 2).getArgument(2).toString())
-                )
-            )
-        }
-
     override fun writeCommand(pto: IPrologTermOutput?) {
         print(".")
         pto?.openTerm(PROLOG_COMMAND_NAME)
+            ?.printAtom(metaData.machinePath)
+            ?.printNumber(augmentations.toLong())
+            ?.printNumber(solverTimeoutMs.toLong())
             ?.printAtom(rawPredicate)
             ?.printVariable(PREDICATE_DATA)
             ?.closeTerm()
+        println("prob2_interface:" + pto.toString())
     }
 }
