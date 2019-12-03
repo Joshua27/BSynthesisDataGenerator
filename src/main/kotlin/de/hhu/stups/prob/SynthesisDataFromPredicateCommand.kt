@@ -5,7 +5,6 @@ import de.prob.animator.command.AbstractCommand
 import de.prob.parser.BindingGenerator
 import de.prob.parser.ISimplifiedROMap
 import de.prob.prolog.output.IPrologTermOutput
-import de.prob.prolog.term.ListPrologTerm
 import de.prob.prolog.term.PrologTerm
 
 /**

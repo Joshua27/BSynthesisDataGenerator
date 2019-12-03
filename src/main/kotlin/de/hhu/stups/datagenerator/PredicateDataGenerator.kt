@@ -3,6 +3,7 @@ package datagenerator
 import com.google.inject.Guice
 import com.google.inject.Stage
 import de.prob.MainModule
+import de.prob.exception.ProBError
 import de.prob.model.representation.Machine
 import de.prob.scripting.Api
 import de.prob.scripting.ModelTranslationError
@@ -25,7 +26,8 @@ class PredicateDataGenerator {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val injector = Guice.createInjector(Stage.PRODUCTION, DataGeneratorModule(), MainModule())
 
-    private fun pathToProbExamples(source: Path) = source.toString().removePrefix("examples/")
+    private fun pathToProbExamples(source: Path) =
+        source.toString().removePrefix("examples/")
 
     @Throws(DataGeneratorException::class)
     private fun getRawDataSetFromDumpEntry(source: Path, dataDumpEntry: String) =
@@ -89,10 +91,12 @@ class PredicateDataGenerator {
                     MetaData(
                         it.source.toString(),
                         (stateSpace.mainComponent as Machine).name,
-                        it.predicateAst.hashCode(), ""
+                        getSHA(it.predicateAst), ""
                     )
-                generatedData.addAll(generateDataFromPredicate(metaData, stateSpace, it))
+                val predicateData = generateDataFromPredicate(metaData, stateSpace, it)
+                generatedData.addAll(predicateData)
             }
+            stateSpace.kill()
             // generated synthesis data is stored in the same folder as the input file
             val target = Paths.get("${sourceFileNoExt}_synthesis_data.xml")
             writePredicateDataSetToFile(generatedData, target)
@@ -110,11 +114,16 @@ class PredicateDataGenerator {
         stateSpace: StateSpace,
         rawDataSet: RawDataSet
     ): Set<PredicateData> {
-        val generateDataCommand =
-            SynthesisDataFromPredicateCommand(
-                metaData, rawDataSet.predicateAst, 5, 10000
-            )
-        stateSpace.execute(generateDataCommand)
-        return generateDataCommand.predicateDataSet
+        return try {
+            val generateDataCommand =
+                SynthesisDataFromPredicateCommand(
+                    metaData, rawDataSet.predicateAst, 5, 10000
+                )
+            stateSpace.execute(generateDataCommand)
+            generateDataCommand.predicateDataSet
+        } catch (e: ProBError) {
+            logger.error("ProB Error when generating data for Pred: $e")
+            emptySet()
+        }
     }
 }

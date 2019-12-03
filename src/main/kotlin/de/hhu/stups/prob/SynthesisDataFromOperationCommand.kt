@@ -52,7 +52,7 @@ class SynthesisDataFromOperationCommand(private val machinePath: String, private
                 BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 3).getArgument(3))
             val processedGt = processGroundTruth(varGts)
             dataVariations.forEach { record ->
-                val metaData = MetaData(machinePath, machineName, 0, operationName)
+                val metaData = MetaData(machinePath, machineName, "", operationName)
                 val operationData = OperationData(metaData, hashSetOf(), hashMapOf())
                 val prologTuples = BindingGenerator.getList(record)
                 prologTuples.forEach {ioTuple ->
