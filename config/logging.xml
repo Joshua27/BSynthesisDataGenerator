@@ -3,7 +3,7 @@
         <!-- encoders are assigned the type
              ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{full} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %de.hhu.stups.getLogger{full} - %msg%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
             <evaluator>
@@ -19,16 +19,16 @@
 
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/.bsynthesis/bsynthesis.log</file>
+        <file>${user.home}/.predicate_data_generator/predicate_data_generator.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>${user.home}/.bsynthesis/bsynthesis-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <fileNamePattern>${user.home}/.predicate_data_generator/predicate_data_generator-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <!-- keep 7 days' worth of history -->
             <maxHistory>7</maxHistory>
         </rollingPolicy>
 
         <encoder>
-            <pattern>%d %-4relative [%thread] %-5level %logger Method:
+            <pattern>%d %-4relative [%thread] %-5level %de.hhu.stups.getLogger Method:
                 %method Line: %line - %msg%n%ex{full}
             </pattern>
         </encoder>
@@ -43,9 +43,9 @@
         </filter>
     </appender>
 
-    <logger name="de.prob" level="debug"/>
-    <logger name="net.sf.ehcache" level="warn"/>
-    <logger name="com.mchange" level="INFO"/>
+    <de.hhu.stups.getLogger name="de.prob" level="debug"/>
+    <de.hhu.stups.getLogger name="net.sf.ehcache" level="warn"/>
+    <de.hhu.stups.getLogger name="com.mchange" level="INFO"/>
 
     <root level="debug">
         <appender-ref ref="STDOUT"/>
