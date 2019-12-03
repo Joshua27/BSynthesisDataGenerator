@@ -1,20 +1,47 @@
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.3.21'
+buildscript {
+    ext.kotlin_version = '1.3.61'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
 }
 
-group 'de.hhu.stups.BSynthesisDataGenerator'
+plugins {
+    id 'com.github.johnrengelman.shadow' version '4.0.4'
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+group 'de.hhu.stups'
 version '1.0-SNAPSHOT'
+
+mainClassName = 'de.hhu.stups.CliKt'
 
 repositories {
     mavenCentral()
+    maven {
+        name "sonatype snapshots"
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+    maven {
+        name "sonatype release"
+        url "https://oss.sonatype.org/content/repositories/releases"
+    }
 }
 
 dependencies {
-    compile group: "de.hhu.stups", name: "de.prob2.kernel", version: "3.2.11", changing: true
+    compile 'de.hhu.stups:de.prob2.kernel:4.0.0-SNAPSHOT'
+    compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version'
     compile group: "org.slf4j", name: "slf4j-api", version: "1.7.25" // MIT License
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
@@ -22,3 +49,37 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin/'
+    test.java.srcDirs += 'src/test/kotlin/'
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "de.hhu.stups.CliKt"
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    exclude('META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA')
+}
+
+task customFatJar(type: Jar) {
+    manifest {
+        attributes "Main-Class": "de.hhu.stups.CliKt"
+    }
+    baseName = 'b-synthesis-data-generator-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+shadowJar {
+    configurations = [project.configurations.compile]
+    zip64 true
+    mergeServiceFiles()
+    relocate('kotlin','datagenerator.kotlin')
+    relocate('org.jetbrains.kotlin','datagenerator.org.jetbrains.kotlin')
+    relocate('junit','datagenerator.junit')
+    relocate('org.slf4j','datagenerator.org.slf4j')
+    relocate('org.junit','datagenerator.org.junit')
+    relocate('org.intellij','datagenerator.org.intellij')
+}
+
