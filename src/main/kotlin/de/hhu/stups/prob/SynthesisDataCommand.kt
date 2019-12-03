@@ -1,8 +1,8 @@
-package prob
+package de.hhu.stups.prob
 
-import datagenerator.GroundTruthComponent
-import datagenerator.Variable
-import datagenerator.VariableState
+import de.hhu.stups.datagenerator.GroundTruthComponent
+import de.hhu.stups.datagenerator.Variable
+import de.hhu.stups.datagenerator.VariableState
 import de.prob.parser.BindingGenerator
 import de.prob.prolog.term.ListPrologTerm
 
@@ -16,7 +16,14 @@ interface SynthesisDataCommand {
             val varType = BindingGenerator.getCompoundTerm(nestedTuple, 2).getArgument(1).toString()
             val varValue = BindingGenerator.getCompoundTerm(nestedTuple, 2).getArgument(2).toString()
                 .removePrefix("'").removeSuffix("'")
-            stateSet.add(VariableState(Variable(varName, varType), varValue))
+            stateSet.add(
+                VariableState(
+                    Variable(
+                        varName,
+                        varType
+                    ), varValue
+                )
+            )
         }
         return stateSet
     }

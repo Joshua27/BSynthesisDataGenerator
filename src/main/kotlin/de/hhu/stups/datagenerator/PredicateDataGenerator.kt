@@ -1,4 +1,4 @@
-package datagenerator
+package de.hhu.stups.datagenerator
 
 import com.google.inject.Guice
 import com.google.inject.Stage
@@ -8,9 +8,9 @@ import de.prob.model.representation.Machine
 import de.prob.scripting.Api
 import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.StateSpace
-import injector.DataGeneratorModule
+import de.hhu.stups.injector.DataGeneratorModule
 import org.slf4j.LoggerFactory
-import prob.SynthesisDataFromPredicateCommand
+import de.hhu.stups.prob.SynthesisDataFromPredicateCommand
 import java.io.IOException
 import java.lang.Exception
 import java.nio.file.Files
@@ -18,13 +18,15 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 class PredicateDataGenerator {
-
     companion object {
         private const val PROB_EXAMPLES_DIR = "/home/joshua/STUPS/"
     }
 
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val injector = Guice.createInjector(Stage.PRODUCTION, DataGeneratorModule(), MainModule())
+    private val injector = Guice.createInjector(
+        Stage.PRODUCTION,
+        DataGeneratorModule(), MainModule()
+    )
 
     private fun pathToProbExamples(source: Path) =
         source.toString().removePrefix("examples/")

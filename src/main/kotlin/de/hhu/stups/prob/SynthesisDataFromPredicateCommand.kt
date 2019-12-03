@@ -1,6 +1,7 @@
-package prob
+package de.hhu.stups.prob
 
-import datagenerator.*
+import de.hhu.stups.datagenerator.MetaData
+import de.hhu.stups.datagenerator.PredicateData
 import de.prob.animator.command.AbstractCommand
 import de.prob.parser.BindingGenerator
 import de.prob.parser.ISimplifiedROMap
@@ -40,7 +41,12 @@ class SynthesisDataFromPredicateCommand(private val metaData: MetaData, private 
         // result is a Prolog list of triples (PositiveInputs, NegativeInputs, GroundTruth)
         val predicateDataArg = bindings?.get(PREDICATE_DATA)
         BindingGenerator.getList(predicateDataArg).forEach {
-            val predicateData = PredicateData(metaData, hashSetOf(), hashSetOf(), hashSetOf())
+            val predicateData = PredicateData(
+                metaData,
+                hashSetOf(),
+                hashSetOf(),
+                hashSetOf()
+            )
             // positive and negative input examples from Prolog are a list of lists
             val positiveInputs =
                 BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, 2).getArgument(1))

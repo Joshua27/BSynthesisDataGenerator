@@ -1,4 +1,4 @@
-package injector
+package de.hhu.stups.injector
 
 import com.google.inject.AbstractModule
 

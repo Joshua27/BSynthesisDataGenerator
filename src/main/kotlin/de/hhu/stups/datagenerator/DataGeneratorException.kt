@@ -1,4 +1,4 @@
-package datagenerator
+package de.hhu.stups.datagenerator
 
 import java.lang.Exception
 

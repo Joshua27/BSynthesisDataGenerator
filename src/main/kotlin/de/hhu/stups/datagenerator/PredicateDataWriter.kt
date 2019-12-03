@@ -1,4 +1,4 @@
-package datagenerator
+package de.hhu.stups.datagenerator
 
 import com.sun.xml.internal.txw2.output.IndentingXMLStreamWriter
 import java.io.File

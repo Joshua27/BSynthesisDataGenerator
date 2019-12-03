@@ -1,5 +1,7 @@
-import datagenerator.OperationDataGenerator
-import datagenerator.PredicateDataGenerator
+package de.hhu.stups
+
+import de.hhu.stups.datagenerator.OperationDataGenerator
+import de.hhu.stups.datagenerator.PredicateDataGenerator
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files

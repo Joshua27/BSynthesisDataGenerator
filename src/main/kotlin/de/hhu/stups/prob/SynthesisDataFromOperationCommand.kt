@@ -1,8 +1,8 @@
-package prob
+package de.hhu.stups.prob
 
-import datagenerator.IOExample
-import datagenerator.MetaData
-import datagenerator.OperationData
+import de.hhu.stups.datagenerator.IOExample
+import de.hhu.stups.datagenerator.MetaData
+import de.hhu.stups.datagenerator.OperationData
 import de.prob.animator.command.AbstractCommand
 import de.prob.parser.BindingGenerator
 import de.prob.parser.ISimplifiedROMap
@@ -52,8 +52,10 @@ class SynthesisDataFromOperationCommand(private val machinePath: String, private
                 BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 3).getArgument(3))
             val processedGt = processGroundTruth(varGts)
             dataVariations.forEach { record ->
-                val metaData = MetaData(machinePath, machineName, "", operationName)
-                val operationData = OperationData(metaData, hashSetOf(), hashMapOf())
+                val metaData =
+                    MetaData(machinePath, machineName, "", operationName)
+                val operationData =
+                    OperationData(metaData, hashSetOf(), hashMapOf())
                 val prologTuples = BindingGenerator.getList(record)
                 prologTuples.forEach {ioTuple ->
                     val input = processState(BindingGenerator.getList(ioTuple.getArgument(0)))
