@@ -9,31 +9,31 @@ import de.prob.prolog.output.IPrologTermOutput
 import de.prob.prolog.term.PrologTerm
 
 /**
- * Generate data from a raw B or Event-B predicate like 'x: Int & y: Int & x > y' to predict components for
- * inductive program synthesis. The data set consists of a set of positive and a set of negative states describing the
+ * Generate data from an untyped B or Event-B predicate AST to predict components for inductive program synthesis.
+ * The data set consists of a set of positive and a set of negative states describing the
  * behavior of the predicate. The ground truth consists of the operators used in the predicate with the specific amount
  * of usages, e.g., [(member,2), (integer_set,2), (conjunct, 2), (greater, 1)] for above predicate.
  */
-class SynthesisDataFromPredicateCommand(private val metaData: MetaData, private val rawPredicate: String) :
+class SynthesisDataFromPredicateCommand(private val metaData: MetaData, private val untypedPredicate: PrologTerm) :
     AbstractCommand(), SynthesisDataCommand {
 
     companion object {
-        private const val PROLOG_COMMAND_NAME = "generate_synthesis_data_from_predicate_"
+        private const val PROLOG_COMMAND_NAME = "generate_synthesis_data_from_predicate_untyped_"
         private const val PREDICATE_DATA = "PredicateData"
     }
 
     private var augmentations = 1
-    private var solverTimeoutMs = 2500
+    private var solverTimeoutMs = 10000
 
     val predicateDataSet = hashSetOf<PredicateData>()
 
-    constructor(metaData: MetaData, rawPredicate: String, augmentations: Int)
-            : this(metaData, rawPredicate) {
+    constructor(metaData: MetaData, untypedPredicate: PrologTerm, augmentations: Int)
+            : this(metaData, untypedPredicate) {
         this.augmentations = augmentations
     }
 
-    constructor(metaData: MetaData, rawPredicate: String, augmentations: Int, solverTimeoutMs: Int)
-            : this(metaData, rawPredicate, augmentations) {
+    constructor(metaData: MetaData, untypedPredicate: PrologTerm, augmentations: Int, solverTimeoutMs: Int)
+            : this(metaData, untypedPredicate, augmentations) {
         this.solverTimeoutMs = solverTimeoutMs
     }
 
@@ -75,7 +75,7 @@ class SynthesisDataFromPredicateCommand(private val metaData: MetaData, private 
             ?.printAtom(metaData.machinePath)
             ?.printNumber(augmentations.toLong())
             ?.printNumber(solverTimeoutMs.toLong())
-            ?.printAtom(rawPredicate)
+            ?.printTerm(untypedPredicate)
             ?.printVariable(PREDICATE_DATA)
             ?.closeTerm()
         println("prob2_interface:" + pto.toString())
