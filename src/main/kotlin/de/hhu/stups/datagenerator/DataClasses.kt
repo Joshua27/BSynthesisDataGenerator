@@ -1,5 +1,6 @@
 package de.hhu.stups.datagenerator
 
+import de.prob.prolog.term.PrologTerm
 import java.nio.file.Path
 
 data class Variable(
@@ -29,7 +30,7 @@ data class MetaData(
     var operationName: String
 )
 
-data class RawDataSet(val predicateAst: String, val source: Path)
+data class RawDataSet(val predicateAst: PrologTerm, val source: Path)
 
 data class PredicateData(
     val metaData: MetaData,
