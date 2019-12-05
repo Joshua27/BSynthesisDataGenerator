@@ -2,17 +2,18 @@ package de.hhu.stups.datagenerator
 
 import com.google.inject.Guice
 import com.google.inject.Stage
+import de.be4.classicalb.core.parser.ClassicalBParser
+import de.hhu.stups.injector.DataGeneratorModule
+import de.hhu.stups.prob.SynthesisDataFromPredicateCommand
 import de.prob.MainModule
 import de.prob.exception.ProBError
 import de.prob.model.representation.Machine
+import de.prob.parserbase.ProBParserBaseAdapter
 import de.prob.scripting.Api
 import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.StateSpace
-import de.hhu.stups.injector.DataGeneratorModule
 import org.slf4j.LoggerFactory
-import de.hhu.stups.prob.SynthesisDataFromPredicateCommand
 import java.io.IOException
-import java.lang.Exception
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -23,6 +24,7 @@ class PredicateDataGenerator {
     }
 
     private val logger = LoggerFactory.getLogger(javaClass)
+    private val parserBaseAdapter = ProBParserBaseAdapter(ClassicalBParser())
     private val injector = Guice.createInjector(
         Stage.PRODUCTION,
         DataGeneratorModule(), MainModule()
@@ -34,7 +36,7 @@ class PredicateDataGenerator {
     @Throws(DataGeneratorException::class)
     private fun getRawDataSetFromDumpEntry(source: Path, dataDumpEntry: String) =
         RawDataSet(
-            dataDumpEntry.substring(dataDumpEntry.indexOf(':') + 1),
+            parserBaseAdapter.parsePredicate(dataDumpEntry.substring(dataDumpEntry.indexOf(':') + 1), false),
             Paths.get(PROB_EXAMPLES_DIR + pathToProbExamples(source))
         )
 
@@ -93,7 +95,7 @@ class PredicateDataGenerator {
                     MetaData(
                         it.source.toString(),
                         (stateSpace.mainComponent as Machine).name,
-                        getSHA(it.predicateAst), ""
+                        getSHA(it.predicateAst.toString()), ""
                     )
                 val predicateData = generateDataFromPredicate(metaData, stateSpace, it)
                 generatedData.addAll(predicateData)
