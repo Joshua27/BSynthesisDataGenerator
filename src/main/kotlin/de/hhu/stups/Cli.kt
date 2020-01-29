@@ -10,16 +10,25 @@ import java.nio.file.Paths
 
 private val logger = LoggerFactory.getLogger(PredicateDataGenerator::class.java)
 
+fun printHelp() {
+    println("-predicate PathToPredicateDump/ PathToProBExamples/")
+    println("-operation PathToProBExamples/")
+}
+
 fun main(args: Array<String>) {
     System.setProperty("logback.configurationFile", "config/logging.xml")
-    if (args.size != 2) {
-        println("One argument expected: Path to the root of the predicate database.")
+    if (args.size < 2) {
+        printHelp()
         return
     }
     val type = args.first()
     val rootPath = Paths.get(args[1])
     if (type == "predicate") {
-        predicateDataGeneration(rootPath)
+        if (args.size != 3) {
+            println("Missing path to ProB examples.")
+        }
+        val publicExamplesPath = Paths.get(args[2])
+        predicateDataGeneration(rootPath, publicExamplesPath)
         return
     }
     if (type == "operation") {
@@ -51,13 +60,13 @@ fun operationDataGeneration(rootPath: Path) {
 /**
  * Path to the root of .pdump files with Jannik's predicate data.
  */
-fun predicateDataGeneration(rootPath: Path?) {
+fun predicateDataGeneration(rootPath: Path?, publicExamplesPath: Path) {
     val dataGenerator = PredicateDataGenerator()
     try {
         Files.walk(rootPath)
             .parallel().forEach {
                 if (it.toString().endsWith("pdump") && !synthesisDataExist(it)) {
-                    dataGenerator.generateDataFromDumpFile(it)
+                    dataGenerator.generateDataFromDumpFile(it, publicExamplesPath)
                 }
             }
     } catch (e: IOException) {
