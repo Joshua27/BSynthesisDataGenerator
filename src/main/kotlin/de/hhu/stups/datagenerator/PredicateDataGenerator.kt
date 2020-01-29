@@ -19,9 +19,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 class PredicateDataGenerator {
-    companion object {
-        private const val PROB_EXAMPLES_DIR = "/home/joshua/STUPS/"
-    }
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val parserBaseAdapter = ProBParserBaseAdapter(ClassicalBParser())
@@ -30,14 +27,19 @@ class PredicateDataGenerator {
         DataGeneratorModule(), MainModule()
     )
 
-    private fun pathToProbExamples(source: Path) =
-        source.toString().removePrefix("examples/")
+    private fun prepareSourcePath(publicExamplesPath: Path, source: Path): String {
+        val publicExamplesPathStr = publicExamplesPath.toString()
+        if (publicExamplesPathStr != "" && publicExamplesPathStr.last() != '/') {
+            return publicExamplesPathStr + "/" + source.toString().removePrefix("examples/")
+        }
+        return source.toString().removePrefix("examples/")
+    }
 
     @Throws(DataGeneratorException::class)
-    private fun getRawDataSetFromDumpEntry(source: Path, dataDumpEntry: String) =
+    private fun getRawDataSetFromDumpEntry(source: Path, publicExamplesPath: Path, dataDumpEntry: String) =
         RawDataSet(
             parserBaseAdapter.parsePredicate(dataDumpEntry.substring(dataDumpEntry.indexOf(':') + 1), false),
-            Paths.get(PROB_EXAMPLES_DIR + pathToProbExamples(source))
+            Paths.get(prepareSourcePath(publicExamplesPath, source))
         )
 
     @Throws(DataGeneratorException::class)
@@ -56,7 +58,7 @@ class PredicateDataGenerator {
     }
 
     @Throws(IOException::class)
-    private fun collectDataFromDumpFile(sourceFile: Path): Set<RawDataSet> {
+    private fun collectDataFromDumpFile(sourceFile: Path, publicExamplesPath: Path): Set<RawDataSet> {
         val machineFile: Path
         val data = hashSetOf<RawDataSet>()
         val lines = Files.lines(sourceFile).iterator()
@@ -68,7 +70,7 @@ class PredicateDataGenerator {
             try {
                 machineFile = Paths.get(next.substring(8))
                 while (lines.hasNext()) {
-                    data.add(getRawDataSetFromDumpEntry(machineFile, lines.next()))
+                    data.add(getRawDataSetFromDumpEntry(machineFile, publicExamplesPath, lines.next()))
                 }
             } catch (e: DataGeneratorException) {
                 logger.warn("Could not translate data from dump entry in file {}.", sourceFile)
@@ -77,12 +79,12 @@ class PredicateDataGenerator {
         return data
     }
 
-    fun generateDataFromDumpFile(sourceFile: Path) {
+    fun generateDataFromDumpFile(sourceFile: Path, publicExamplesPath: Path) {
         logger.info("Translating dump file {}.", sourceFile)
         val rawData: Set<RawDataSet>
         val generatedData = hashSetOf<PredicateData>()
         try {
-            rawData = collectDataFromDumpFile(sourceFile)
+            rawData = collectDataFromDumpFile(sourceFile, publicExamplesPath)
             if (rawData.isEmpty()) {
                 logger.info("No training data found.")
                 return
