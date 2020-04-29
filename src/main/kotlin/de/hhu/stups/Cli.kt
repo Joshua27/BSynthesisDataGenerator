@@ -26,6 +26,7 @@ fun main(args: Array<String>) {
     if (type == "predicate") {
         if (args.size != 3) {
             println("Missing path to ProB examples.")
+            return
         }
         val publicExamplesPath = Paths.get(args[2])
         predicateDataGeneration(rootPath, publicExamplesPath)
@@ -49,7 +50,7 @@ fun operationDataGeneration(rootPath: Path) {
             if ((it.toString().endsWith(".mch") || it.toString().endsWith(".eventb")) &&
                 !synthesisDataExist(it)
             ) {
-                //dataGenerator.generateData(it) TODO
+                dataGenerator.generateData(it)
             }
         }
     } catch (e: IOException) {
