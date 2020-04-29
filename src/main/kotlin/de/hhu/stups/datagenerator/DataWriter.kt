@@ -6,17 +6,6 @@ import java.io.FileOutputStream
 import java.nio.file.Path
 import javax.xml.stream.XMLOutputFactory
 import javax.xml.stream.XMLStreamWriter
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
-
-
-@Throws(NoSuchAlgorithmException::class)
-fun getSHA(input: String): String {
-    val bytes = input.toByteArray()
-    val md = MessageDigest.getInstance("SHA-256")
-    val digest = md.digest(bytes)
-    return digest.fold("", { str, it -> str + "%02x".format(it) })
-}
 
 fun writePredicateDataSetToFile(predicateDataSet: Set<PredicateData>, target: Path) {
     val xmlWriter = IndentingXMLStreamWriter(
@@ -30,7 +19,7 @@ fun writePredicateDataSetToFile(predicateDataSet: Set<PredicateData>, target: Pa
         xmlWriter.element("record") {
             attribute("path", predicateData.metaData.machinePath)
             attribute("machine", predicateData.metaData.machineName)
-            attribute("hash", predicateData.metaData.predicateHash)
+            attribute("hash", predicateData.metaData.astHash)
             attribute("examples", predicateData.amountOfExamples().toString())
             attribute("vars", predicateData.amountOfVariables().toString())
             element("vars") {
