@@ -10,7 +10,6 @@ import de.prob.exception.ProBError
 import de.prob.model.representation.Machine
 import de.prob.parserbase.ProBParserBaseAdapter
 import de.prob.scripting.Api
-import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.StateSpace
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -18,7 +17,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class PredicateDataGenerator {
+class PredicateDataGenerator : DataGenerator() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val parserBaseAdapter = ProBParserBaseAdapter(ClassicalBParser())
@@ -41,21 +40,6 @@ class PredicateDataGenerator {
             parserBaseAdapter.parsePredicate(dataDumpEntry.substring(dataDumpEntry.indexOf(':') + 1), false),
             Paths.get(prepareSourcePath(publicExamplesPath, source))
         )
-
-    @Throws(DataGeneratorException::class)
-    private fun loadStateSpace(api: Api, file: Path): StateSpace {
-        logger.info("\tLoading state space for {}", file)
-        try {
-            val fileName = file.toString()
-            return when {
-                fileName.endsWith(".bcm") -> api.eventb_load(file.toString())
-                fileName.endsWith(".mch") -> api.b_load(file.toString())
-                else -> throw DataGeneratorException("Unknown machine type.")
-            }
-        } catch (e: ModelTranslationError) {
-            throw DataGeneratorException("Unable to load state space due to model translation error.")
-        }
-    }
 
     @Throws(IOException::class)
     private fun collectDataFromDumpFile(sourceFile: Path, publicExamplesPath: Path): Set<RawDataSet> {

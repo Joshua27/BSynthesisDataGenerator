@@ -7,6 +7,71 @@ import java.nio.file.Path
 import javax.xml.stream.XMLOutputFactory
 import javax.xml.stream.XMLStreamWriter
 
+fun getStateForVarFromExample(varName: String, state: HashSet<VariableState>): String {
+    state.forEach {
+        if (it.variable.name == varName) {
+            return it.value
+        }
+    }
+    throw Exception("Variable name not found for operation data.")
+}
+
+fun writeOperationDataSetToFile(operationDataSet: Set<OperationData>, target: Path) {
+    val xmlWriter = IndentingXMLStreamWriter(
+        XMLOutputFactory.newFactory().createXMLStreamWriter(FileOutputStream(File(target.toUri())), "UTF-8")
+    )
+    // xmlWriter.document {
+    //element("synthesis-data") {
+    //    attribute("type", "predicates")
+    //    attribute("created", LocalDateTime.now().toString())
+    operationDataSet.forEach { operationData ->
+        xmlWriter.element("record") {
+            attribute("path", operationData.metaData.machinePath)
+            attribute("machine", operationData.metaData.machineName)
+            attribute("operation", operationData.metaData.operationName)
+            //attribute("hash", operationData.metaData.astHash)
+            attribute("examples", operationData.amountOfExamples().toString())
+            attribute("vars", operationData.amountOfVariables().toString())
+            element("vars") {
+                operationData.getVariables().forEach { variable ->
+                    val varName = variable.name
+                    element("var") {
+                        element("name", varName)
+                        element("type", variable.type)
+                        element("examples") {
+                            operationData.examples.forEach { example ->
+                                element("example") {
+                                    element(
+                                        "input",
+                                        getStateForVarFromExample(varName, example.input)
+                                    )
+                                    element(
+                                        "output",
+                                        getStateForVarFromExample(varName, example.output)
+                                    )
+                                }
+                            }
+                        }
+                        element("ground-truth") {
+                            operationData.varGroundTruths[varName]?.forEach {
+                                element("component") {
+                                    element("name", it.componentName)
+                                    element("amount", it.componentAmount.toString())
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //  }
+    }
+    println()
+    println("Output written to: $target")
+    xmlWriter.flush()
+    xmlWriter.close()
+}
+
 fun writePredicateDataSetToFile(predicateDataSet: Set<PredicateData>, target: Path) {
     val xmlWriter = IndentingXMLStreamWriter(
         XMLOutputFactory.newFactory().createXMLStreamWriter(FileOutputStream(File(target.toUri())), "UTF-8")

@@ -26,7 +26,7 @@ data class GroundTruthComponent(
 data class MetaData(
     val machinePath: String,
     val machineName: String,
-    val predicateHash: String,
+    val astHash: String,
     var operationName: String
 )
 
@@ -57,6 +57,6 @@ data class OperationData(
     fun amountOfVariables() = if (examples.isNotEmpty()) examples.first().input.size
     else 0
 
-    fun getVariables() = if (examples.isNotEmpty()) examples.first().input.map { it.variable }
-    else emptySet<Variable>()
+    fun getVariables(): List<Variable> = if (examples.isNotEmpty()) examples.first().input.map { it.variable }
+    else emptyList()
 }
