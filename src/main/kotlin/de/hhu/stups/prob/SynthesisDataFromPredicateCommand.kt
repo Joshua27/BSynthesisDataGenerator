@@ -22,7 +22,7 @@ class SynthesisDataFromPredicateCommand(private val metaData: MetaData, private 
         private const val PREDICATE_DATA = "PredicateData"
     }
 
-    private var augmentations = 1
+    private var augmentations = 10
     private var solverTimeoutMs = 10000
 
     val predicateDataSet = hashSetOf<PredicateData>()
