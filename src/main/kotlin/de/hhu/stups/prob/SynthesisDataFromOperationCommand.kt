@@ -17,26 +17,25 @@ import de.prob.prolog.term.PrologTerm
  * Special identifiers are 'global_ground_truth_vars' and 'global_ground_truth_params' with the bundled ground truth
  * of an operation's body and the ground truth of its parameters respectively.
  */
-class SynthesisDataFromOperationCommand(private val machinePath: String, private val machineName: String) :
-    AbstractCommand(), SynthesisDataCommand {
+class SynthesisDataFromOperationCommand(private val metaData: MetaData) : AbstractCommand(), SynthesisDataCommand {
 
     companion object {
-        private const val PROLOG_COMMAND_NAME = "generate_operation_data_from_machine_path_ "
+        private const val PROLOG_COMMAND_NAME = "generate_data_from_machine_operation_"
         private const val OPERATION_DATA = "OperationData"
     }
 
     private var augmentations = 10
-    private var solverTimeoutMs = 2500
+    private var solverTimeoutMs = 10000
 
     val operationDataSet = hashSetOf<OperationData>()
 
-    constructor(machinePath: String, machineName: String, augmentations: Int)
-            : this(machinePath, machineName) {
+    constructor(metaData: MetaData, augmentations: Int)
+            : this(metaData) {
         this.augmentations = augmentations
     }
 
-    constructor(machinePath: String, machineName: String, augmentations: Int, solverTimeoutMs: Int)
-            : this(machinePath, machineName, augmentations) {
+    constructor(metaData: MetaData, augmentations: Int, solverTimeoutMs: Int)
+            : this(metaData, augmentations) {
         this.solverTimeoutMs = solverTimeoutMs
     }
 
@@ -46,18 +45,14 @@ class SynthesisDataFromOperationCommand(private val machinePath: String, private
         BindingGenerator.getList(operationDataArg).forEach {
             val dataVariations =
                 BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 3).getArgument(1))
-            val operationName =
-                BindingGenerator.getCompoundTerm(BindingGenerator.getCompoundTerm(it, ",", 3).getArgument(2), 0).functor
             val varGts =
                 BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 3).getArgument(3))
             val processedGt = processGroundTruth(varGts)
             dataVariations.forEach { record ->
-                val metaData =
-                    MetaData(machinePath, machineName, "", operationName)
                 val operationData =
                     OperationData(metaData, hashSetOf(), hashMapOf())
                 val prologTuples = BindingGenerator.getList(record)
-                prologTuples.forEach {ioTuple ->
+                prologTuples.forEach { ioTuple ->
                     val input = processState(BindingGenerator.getList(ioTuple.getArgument(0)))
                     val output = processState(BindingGenerator.getList(ioTuple.getArgument(1)))
                     operationData.examples.add(IOExample(input, output))
@@ -71,9 +66,11 @@ class SynthesisDataFromOperationCommand(private val machinePath: String, private
     override fun writeCommand(pto: IPrologTermOutput?) {
         print(".")
         pto?.openTerm(PROLOG_COMMAND_NAME)
-            ?.printAtom(machinePath)
+            ?.printAtom(metaData.operationName)
             ?.printNumber(augmentations.toLong())
             ?.printNumber(solverTimeoutMs.toLong())
+            ?.printAtom(metaData.machinePath)
+            ?.printAtom(metaData.machineName)
             ?.printVariable(OPERATION_DATA)
             ?.closeTerm()
         println("prob2_interface:" + pto.toString())
