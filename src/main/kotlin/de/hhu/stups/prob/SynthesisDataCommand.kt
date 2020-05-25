@@ -45,11 +45,11 @@ interface SynthesisDataCommand {
             HashMap<String, HashSet<GroundTruthComponent>> {
         val varGts = hashMapOf<String, HashSet<GroundTruthComponent>>()
         prologGroundTruth?.forEach {
-            val varName = BindingGenerator.getCompoundTerm(it, ",", 1).functor
+            val varName = BindingGenerator.getCompoundTerm(it, ",", 2).getArgument(1).toString()
             val groundTruth = hashSetOf<GroundTruthComponent>()
             processGroundTruth(
                 groundTruth,
-                BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 2))
+                BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 2).getArgument(2))
             )
             varGts[varName] = groundTruth
         }
