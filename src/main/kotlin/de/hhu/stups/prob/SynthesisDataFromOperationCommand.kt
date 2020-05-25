@@ -44,17 +44,18 @@ class SynthesisDataFromOperationCommand(private val metaData: MetaData) : Abstra
         val operationDataArg = bindings?.get(OPERATION_DATA)
         BindingGenerator.getList(operationDataArg).forEach {
             val dataVariations =
-                BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 3).getArgument(1))
-            val varGts =
-                BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 3).getArgument(3))
+                BindingGenerator.getList(BindingGenerator.getCompoundTerm(it, ",", 2).getArgument(1))
+            val nestedTuple =
+                BindingGenerator.getCompoundTerm(BindingGenerator.getCompoundTerm(it, 2).getArgument(2), ",", 2)
+            val varGts = BindingGenerator.getList(nestedTuple.getArgument(2))
             val processedGt = processGroundTruth(varGts)
             dataVariations.forEach { record ->
                 val operationData =
                     OperationData(metaData, hashSetOf(), hashMapOf())
                 val prologTuples = BindingGenerator.getList(record)
                 prologTuples.forEach { ioTuple ->
-                    val input = processState(BindingGenerator.getList(ioTuple.getArgument(0)))
-                    val output = processState(BindingGenerator.getList(ioTuple.getArgument(1)))
+                    val input = processState(BindingGenerator.getList(ioTuple.getArgument(1)))
+                    val output = processState(BindingGenerator.getList(ioTuple.getArgument(2)))
                     operationData.examples.add(IOExample(input, output))
                 }
                 operationData.varGroundTruths.putAll(processedGt)
